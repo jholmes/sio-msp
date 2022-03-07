@@ -1,4 +1,3 @@
-
 #!/bin/bash -f
 #  "Usage: mkenv filename "
 #  Create an envelope file from a correlate file
@@ -9,15 +8,15 @@
 #
 #  Note that no filter or decimation is done here.
 if [ $# != 1 ]; then
-    echo "Usage: mkenvb filename "
+    echo "Usage: mkenv filename "
     exit 1
 fi
 FILE=$1
 
-sioseis << eof
+sioseis << EOF
 procs diskin header t2f f2t gains header2 prout diskoa end
 diskin
-  ipath $FILE 
+  ipath segy/$FILE.sgy
   #delay 
   renum 1  end
 end
@@ -46,7 +45,7 @@ filter
 ftype 0 pass 2 500 dbdrop 48 end
 end
 diskoa
-   opath segy/env-$FILE  end
+   opath env-segy/env-$FILE.sgy  end
 end
 end
-eof
+EOF

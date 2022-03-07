@@ -1,7 +1,9 @@
+#!/bin/bash -f
+
 #  SIOSEIS scripts to remove the ship heave.
 #
 #      Heave removal using automatic picking of the water bottom by
-#      a sliding average amplitude window each trace
+#      a sliding average amplitude window over each trace
 #
 #      This method of heave removal uses the difference between
 #      the automatic first break pick and the smoothed automatic
@@ -26,8 +28,8 @@
 #       Threshold is the amplitude to determine between water and seafloor--
 #       usually in the thousands.
 
-sioseis << eof
-procs diskin wbt mute diskoa prout end #swell after mute before diskoa
+sioseis << EOF
+procs diskin wbt mute diskoa prout end swell after mute before diskoa
 diskin
     fno 0 lno 999999 
     ipath segy/$1.seg set 0.0 1.0 end
@@ -56,6 +58,6 @@ prout
 end
 
 end
-eof
+EOF
 
 #mv $1h$2.sgy segydh/
