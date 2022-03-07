@@ -2,14 +2,15 @@
 
 VER=0.9
 
-echo "/----------------------------------------"
-echo "/ SIO Marine Seismic Processing Package"
+echo "/------------------------------------------------------------------"
+echo "/ SIO Marine Seismic Processing Package Installer"
 echo "/"
-echo "/ This script will confirm that you have Git and Python3 installed."
+echo "/ This script will confirm that you have Git, Python3, and Docker"
+echo "/ installed. If they aren't found, it will prompt you to install."
 echo "/"
 echo "/ Version ${VER}. Licensed under GNU GPL3."
-echo "/ (c) UC San Diego, jjholmes@ucsd.edu"
-echo "/----------------------------------------"
+echo "/ (c) 2022, UC San Diego, jjholmes@ucsd.edu"
+echo "/------------------------------------------------------------------"
 
 case "$OSTYPE" in
   linux*)   echo "System detected: Linux / WSL" ;;
@@ -22,41 +23,51 @@ case "$OSTYPE" in
   *)        echo "System detected: unknown ($OSTYPE)" ;;
 esac
 
-git --version 2>&1 >/dev/null
+git --version > /dev/null 2>&1
 GIT_IS_AVAILABLE=$?
 
-python3 --version 2>&1 >/dev/null
+python3 --version > /dev/null 2>&1
 PYTHON3_IS_AVAILABLE=$?
+
+DOCKER_IS_AVAILABLE=0
+if [[ $(which docker) && $(docker --version) ]]; then
+    DOCKER_IS_AVAILABLE=1
+fi
 
 NEEDS_INSTALL=0
 
-packagesNeeded=
+PACKAGESNEEDED=
 if [ $GIT_IS_AVAILABLE -eq 0 ]; then
   echo "Git is not installed on this system."
-  packagesNeeded='git '
-  $NEEDS_INSTALL=1
+  PACKAGESNEEDED='git '
+  NEEDS_INSTALL=1
 fi
 if [ $PYTHON3_IS_AVAILABLE -eq 0 ]; then
   echo "Python3 is not installed on this system."
-  packagesNeeded="${packagesNeeded}python3"
-  $NEEDS_INSTALL=1
+  PACKAGESNEEDED="${PACKAGESNEEDED}python3 "
+  NEEDS_INSTALL=1
+fi
+if [ $DOCKER_IS_AVAILABLE -eq 0 ]; then
+  echo "Docker is not installed on this system."
+  PACKAGESNEEDED="${PACKAGESNEEDED}docker "
+  NEEDS_INSTALL=1
 fi
 
-if [ $NEEDS_INSTALL -eq 1]; then
+if [ $NEEDS_INSTALL -eq 1 ]; then
   if [[ $OSTYPE == 'linux'* ]]; then
-    if [ -x "$(command -v apk)" ];       then GIT_INSTALL_CMD="sudo apk add --no-cache $packagesNeeded"
-    elif [ -x "$(command -v apt-get)" ]; then GIT_INSTALL_CMD="sudo apt-get install $packagesNeeded"
-    elif [ -x "$(command -v dnf)" ];     then GIT_INSTALL_CMD="sudo dnf install $packagesNeeded"
-    elif [ -x "$(command -v yum)" ];     then GIT_INSTALL_CMD="sudo yum install $packagesNeeded"
-    elif [ -x "$(command -v zypper)" ];  then GIT_INSTALL_CMD="sudo zypper install $packagesNeeded"
+    if [ -x "$(command -v apk)" ];       then GIT_INSTALL_CMD="sudo apk add --no-cache $PACKAGESNEEDED"
+    elif [ -x "$(command -v apt-get)" ]; then GIT_INSTALL_CMD="sudo apt-get install $PACKAGESNEEDED"
+    elif [ -x "$(command -v dnf)" ];     then GIT_INSTALL_CMD="sudo dnf install $PACKAGESNEEDED"
+    elif [ -x "$(command -v yum)" ];     then GIT_INSTALL_CMD="sudo yum install $PACKAGESNEEDED"
+    elif [ -x "$(command -v zypper)" ];  then GIT_INSTALL_CMD="sudo zypper install $PACKAGESNEEDED"
     else
-      echo "FAILED TO INSTALL PACKAGE: Package manager not found. You must manually install: $packagesNeeded">&2;
+      echo "FAILED TO INSTALL PACKAGE: Package manager not found. You must manually install: $PACKAGESNEEDED">&2;
       exit
     fi
   elif [[ $OSTYPE == 'darwin'* ]]; then
-    brew -v >/dev/null 2>&1
+    brew -v > /dev/null 2>&1
     BREW_IS_AVAILABLE=$?
-    port version >/dev/null 2>&1
+    port version > /dev/null 2>&1
     MACPORTS_IS_AVAILABLE=$?
 
     if [ $BREW_IS_AVAILABLE -eq 1 ]; then
@@ -71,22 +82,13 @@ if [ $NEEDS_INSTALL -eq 1]; then
       exit
     fi
   fi
-  echo "Would you like to install Git? [y/n]: "
+  echo "Would you like to install missing packages? [y/n]: "
   select yn in "Yes" "No"; do
     case $yn in
       Yes ) $GIT_INSTALL_CMD; break;;
-      No ) echo "Git is necessary to proceed. Quitting."; exit;;
+      No ) echo "CANNOT PROCEED: Missing packages, ${PACKAGESNEEDED}, are necessary to continue. Exiting."; exit;;
     esac
   done
 fi
 
-
-
-
-
-
-
-
-
-
-
+git clone https://github.com/jholmes/sio-msp.git
