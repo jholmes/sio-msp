@@ -93,7 +93,7 @@ git clone https://github.com/jholmes/sio-msp.git
 echo ""
 echo "Preparing Python environment..."
 cd sio-msp || exit 1
-mkdir data
+mkdir data data/nav data/jpegs data/segy data/segydh data/env-segy data/su
 chmod a+x ./start-msp
 python3 -m venv venv
 source venv/bin/activate
