@@ -8,15 +8,26 @@ from pathlib import Path
 import argparse
 import re
 from termcolor import cprint
-from subprocess import PIPE, run
 
 image_label = "jamesinho/sio-msp"
 image_tag = "1.0.0"
 
 cwd = os.getcwd()
-source_mnt_dir = cwd + "/data"
-target_mnt_dir = "/seisproc/data"
-data_mounts = [Mount(target=target_mnt_dir, source=source_mnt_dir, type='bind', read_only=False)]
+data_src_dir = cwd + "/data"
+data_dst_dir = "/seisproc/data"
+scripts_src_dir = cwd + "/scripts"
+scripts_dst_dir = "/seisproc/scripts"
+
+data_mounts = [
+    Mount(target=data_dst_dir,
+          source=data_src_dir,
+          type='bind',
+          read_only=False),
+    Mount(target=scripts_dst_dir,
+          source=scripts_src_dir,
+          type='bind',
+          read_only=False)
+]
 
 
 def main():
@@ -54,15 +65,16 @@ def main():
         t_max = input("Enter the name of the data file: ")
     data_tag = Path(data_fn).stem
 
+    # Initialize docker client
     client = docker.from_env()
 
     # Check to see if the image is already loaded. If not, get it.
     if len(client.images.list(image_label)) == 0:
-        print ("Pulling down the container image. This is a one-time process. Please be patient.\n")
+        print("Pulling down the container image. This is a one-time process. Please be patient.\n")
         client.images.pull(image_label, tag=image_tag)
 
     cprint("Do you want to run the whole process or only a single step of the process?", 'cyan', attrs=['bold'])
-    print("Enter the steps you wish to run, comma or space separated [e.g.: \"2 3 4\", or \"2,3,4\"], "
+    print("Enter the steps you wish to run, comma or space separated [e.g.: \"2 3 4\", or \"2,3,4\"], \n"
           "or press [return] to run the whole process.\n")
     cprint("\tMake Envelope:\t\t1", 'cyan')
     cprint("\tSwell Removal:\t\t2", 'cyan')
@@ -125,15 +137,13 @@ def main():
                     clip = new_clip
             command = "jxstar {} {} env-{}h{} {} {}".format(t_min, t_max, data_tag, thresh, h_box, clip)
 
-        client.containers.run(image_label + ":" + image_tag, command, mounts=data_mounts, remove=True)
+        container = client.containers.run(image_label + ":" + image_tag, command, mounts=data_mounts, remove=True, detach=True)
+        output = container.attach(stdout=True, stream=True, logs=True)
+        for line in output:
+            print(line.decode('ascii'))
 
     print("\nFinished processing.")
 
-
-# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 bash mkenv FF12.sgy
-# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 bash jswell env-FF12 9000
-# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 jreadxstar env-FF12h9000
-# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 jxstar 0.0 0.6 env-FF12h9000 10 98
 
 if __name__ == "__main__":
     main()
