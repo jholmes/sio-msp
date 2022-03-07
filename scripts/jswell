@@ -32,7 +32,7 @@ sioseis << EOF
 procs diskin wbt mute diskoa prout end swell after mute before diskoa
 diskin
     fno 0 lno 999999 
-    ipath segy/$1.seg set 0.0 1.0 end
+    ipath segy/$1.sgy set 0.0 1.0 end
 end
 wbt
    #thres $2 track 0.003 lprint 2 end #adjust track to widen SF range, orig 0.03
