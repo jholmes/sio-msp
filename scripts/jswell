@@ -1,0 +1,61 @@
+#  SIOSEIS scripts to remove the ship heave.
+#
+#      Heave removal using automatic picking of the water bottom by
+#      a sliding average amplitude window each trace
+#
+#      This method of heave removal uses the difference between
+#      the automatic first break pick and the smoothed automatic
+#      first break pick.
+#
+#      The automatic picker in process WBT picks the
+#      first arrival and puts it in SEG-Y header word 50.
+#
+#      The process SWELL computes the average water bottom time of
+#      a group of traces, then shifts the middle trace of the group
+#      by the difference of the middle trace water bottom time and
+#      the average water bottom time.  For example, if the swell period
+#      is 15 traces, the time associated with the seventh trace is
+#      subtracted from the average time of all 15 traces.
+#
+#      It seems to work best to have the MUTE process occur before the
+#      SWELL process; otherwise the last traces are distorted.
+
+#      In process SWELL, parameter N is The number of traces in the
+#      period of the swell to be removed.
+#       Run by ./jswell filename (without segy) threshold
+#       Threshold is the amplitude to determine between water and seafloor--
+#       usually in the thousands.
+
+sioseis << eof
+procs diskin wbt mute diskoa prout end #swell after mute before diskoa
+diskin
+    fno 0 lno 999999 
+    ipath segy/$1.seg set 0.0 1.0 end
+end
+wbt
+   #thres $2 track 0.003 lprint 2 end #adjust track to widen SF range, orig 0.03
+    peak abs 
+    lprint 2
+    end	
+end
+mute
+    #xtp 420 1.39 785 1.7 end
+    fno 1 ttp 1 0 addwb yes end
+end
+gains
+   fno 0 lno 99999999
+   type 3 alpha 1.5
+  
+   end
+end
+diskoa
+    opath segydh/$1h$2.sgy end
+end
+prout
+    fno 1 lno 999999 indices r60 r59 r50 end
+end
+
+end
+eof
+
+#mv $1h$2.sgy segydh/
