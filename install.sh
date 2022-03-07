@@ -55,7 +55,7 @@ if [ $NEEDS_INSTALL -eq 1 ]; then
     elif [ -x "$(command -v zypper)" ];  then GIT_INSTALL_CMD="sudo zypper install $PACKAGES_NEEDED"
     else
       echo "FAILED TO INSTALL PACKAGE: Package manager not found. You must manually install: $PACKAGES_NEEDED">&2;
-      exit
+      exit 1
     fi
   elif [[ $OSTYPE == 'darwin'* ]]; then
     BREW_IS_AVAILABLE=1
@@ -77,14 +77,14 @@ if [ $NEEDS_INSTALL -eq 1 ]; then
     else
       echo "FAILED TO INSTALL PACKAGE: Package manager not found. Please install either Macports or Homebrew, then "
       echo "install Git using one of them."
-      exit
+      exit 1
     fi
   fi
   echo "Would you like to install missing packages? [y/n]: "
   select yn in "Yes" "No"; do
     case $yn in
       Yes ) $GIT_INSTALL_CMD; break;;
-      No ) echo "CANNOT PROCEED: Missing packages, ${PACKAGES_NEEDED}, are necessary to continue. Exiting."; exit;;
+      No ) echo "CANNOT PROCEED: Missing packages, ${PACKAGES_NEEDED}, are necessary to continue. Exiting."; exit 1;;
     esac
   done
 fi
