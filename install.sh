@@ -11,6 +11,7 @@ echo "/"
 echo "/ Version ${VER}. Licensed under GNU GPL3."
 echo "/ (c) 2022, UC San Diego, jjholmes@ucsd.edu"
 echo "/------------------------------------------------------------------"
+echo ""
 
 case "$OSTYPE" in
   linux*)   echo "System detected: Linux / WSL" ;;
@@ -23,35 +24,27 @@ case "$OSTYPE" in
   *)        echo "System detected: unknown ($OSTYPE)" ;;
 esac
 
-git --version > /dev/null 2>&1
-GIT_IS_AVAILABLE=$?
-
-python3 --version > /dev/null 2>&1
-PYTHON3_IS_AVAILABLE=$?
-
-DOCKER_IS_AVAILABLE=0
-if [[ $(which docker) && $(docker --version) ]]; then
-    DOCKER_IS_AVAILABLE=1
-fi
-
 NEEDS_INSTALL=0
 
-PACKAGES_NEEDED=
-if [ $GIT_IS_AVAILABLE -eq 0 ]; then
-  echo "Git is not installed on this system."
+if ! [ -x "$(command -v git)" ]; then
   PACKAGES_NEEDED='git '
   NEEDS_INSTALL=1
+  echo "Git is not installed on this system."
 fi
-if [ $PYTHON3_IS_AVAILABLE -eq 0 ]; then
-  echo "Python3 is not installed on this system."
+
+if ! [ -x "$(command -v python3)" ]; then
   PACKAGES_NEEDED="${PACKAGES_NEEDED}python3 "
   NEEDS_INSTALL=1
+  echo "Python3 is not installed on this system."
 fi
-if [ $DOCKER_IS_AVAILABLE -eq 0 ]; then
-  echo "Docker is not installed on this system."
+
+if ! [ -x "$(command -v docker)" ]; then
   PACKAGES_NEEDED="${PACKAGES_NEEDED}docker "
   NEEDS_INSTALL=1
+  echo "Docker is not installed on this system."
 fi
+
+echo ""
 
 if [ $NEEDS_INSTALL -eq 1 ]; then
   if [[ $OSTYPE == 'linux'* ]]; then
@@ -65,10 +58,15 @@ if [ $NEEDS_INSTALL -eq 1 ]; then
       exit
     fi
   elif [[ $OSTYPE == 'darwin'* ]]; then
-    brew -v > /dev/null 2>&1
-    BREW_IS_AVAILABLE=$?
-    port version > /dev/null 2>&1
-    MACPORTS_IS_AVAILABLE=$?
+    BREW_IS_AVAILABLE=1
+    if ! [ -x "$(command -v brew)" ]; then
+      BREW_IS_AVAILABLE=0
+    fi
+
+    MACPORTS_IS_AVAILABLE=1
+    if ! [ -x "$(command -v port)" ]; then
+      MACPORTS_IS_AVAILABLE=0
+    fi
 
     if [ $BREW_IS_AVAILABLE -eq 1 ]; then
       echo "Homebrew is available."
@@ -92,3 +90,21 @@ if [ $NEEDS_INSTALL -eq 1 ]; then
 fi
 
 git clone https://github.com/jholmes/sio-msp.git
+echo ""
+echo "Preparing Python environment..."
+cd sio-msp
+mkdir data
+chmod a+x ./start-msp
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+
+echo ""
+echo "/------------------------------------------------------------------"
+echo "/ Finished installation."
+echo "/"
+echo "/ Next, run the start-msp script to process files:"
+echo "/ $ cd sio-msp"
+echo "/ $ ./start-msp -f <SEG-Y file>"
+echo "/------------------------------------------------------------------"
