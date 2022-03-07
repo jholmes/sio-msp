@@ -1,22 +1,24 @@
 #!/bin/bash -f
-#  "Usage: mkenv filename "
+#  "Usage: mkenv filename filename-root"
 #  Create an envelope file from a correlate file
 #  The output correlate filename is the same as the input filename with
 #  the prefix "env-".   e.g.   env-filename.
 #
 #  This script must be run in the same directory as the input file.
+#  Filename root is just the filename without a file extension.
 #
 #  Note that no filter or decimation is done here.
 if [ $# != 1 ]; then
-    echo "Usage: mkenv filename "
+    echo "Usage: mkenv filename filename-root"
     exit 1
 fi
 FILE=$1
+STEM=$2
 
 sioseis << EOF
 procs diskin header t2f f2t gains header2 prout diskoa end
 diskin
-  ipath segy/$FILE.sgy
+  ipath segy/$FILE
   #delay 
   renum 1  end
 end
@@ -45,7 +47,7 @@ filter
 ftype 0 pass 2 500 dbdrop 48 end
 end
 diskoa
-   opath env-segy/env-$FILE.sgy  end
+   opath env-segy/env-$STEM.sgy  end
 end
 end
 EOF
