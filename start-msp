@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+
+import os
+import docker
+from docker.types import Mount
+from pathlib import Path
+import argparse
+import re
+from termcolor import cprint
+
+image_label = "jamesinho/sio-msp"
+image_tag = "1.0.0"
+
+cwd = os.getcwd()
+source_mnt_dir = cwd + "/data"
+target_mnt_dir = "/seisproc/data"
+data_mounts = [Mount(target=target_mnt_dir, source=source_mnt_dir, type='bind')]
+
+
+def main():
+    usage = "start-msp -f/--filename <filename> -t/--threshold <threshold> -a/--t_min <t_min> " \
+            "-b/--t_max <t_max> -h/--h_box <h_box> -c/--clip <clip>"
+
+    parser = argparse.ArgumentParser(description='MSP controller utility', usage=usage)
+
+    parser.add_argument('-a', '--t_min', type=float, required=False, default=0.0,
+                        help="Minimum Time")
+    parser.add_argument('-b', '--t_max', type=float, required=False, default=0.0,
+                        help="Maximum Time")
+    parser.add_argument('-c', '--clip', type=int, required=False, default=0,
+                        help="Clip any value whose magnitude exceeds clip_value")
+    parser.add_argument('-f', '--filename', type=str, required=False,
+                        help="Data file")
+    parser.add_argument('-h', '--h_box', type=int, required=False, default=0,
+                        help="Height of display area")
+    parser.add_argument('-t', '--threshold', type=int, required=False, default=0,
+                        help="Threshold value which defines the water bottom, for heave removal")
+
+    args = parser.parse_args()
+    t_min = args.t_min
+    t_max = args.t_max
+    h_box = args.h_box
+    clip = args.clip
+    thresh = args.threshold
+    data_fn = args.filename
+
+    cprint("*** SIO Marine Seismic Processing Utility ***\n\n", 'cyan', attrs=['bold'])
+
+    if data_fn == "":
+        t_max = input("Enter the name of the data file: ")
+    data_tag = Path(data_fn).stem
+
+    client = docker.from_env()
+
+    # Check to see if the image is already loaded. If not, get it.
+    if len(client.images.list(image_label)) == 0:
+        client.images.pull(image_label, tag=image_tag)
+
+    print("Do you want to run the whole process or only a single step of the process?")
+    print("Enter the steps you wish to run, comma or space separated [e.g.: \"2 3 4\", or \"2,3,4\"], "
+          "or press [return] to run the whole process.")
+    cprint("Make Envelope:\t\t1", 'cyan')
+    cprint("Swell Removal:\t\t2", 'cyan')
+    cprint("SEG-Y to SU Conversion:\t3", 'cyan')
+    cprint("Display Plot:\t\t4", 'cyan')
+    vals = input("Enter selection: ")
+
+    steps = [1, 2, 3, 4]
+    if vals:
+        steps = re.split("[\\s+,]", vals)
+
+    for step_num in steps:
+        command = ""
+        if step_num == 1:
+            command = "bash mkenv {}".format(data_fn)
+
+        if step_num == 2:
+            if thresh == 0:
+                cprint("Currently water bottom threshold value is set to {}. ".format(thresh), 'cyan')
+                thresh = input("Enter new value to change or [return] to leave unchanged: ")
+            command = "bash jswell env-{} {}".format(data_tag, thresh)
+
+        if step_num == 3:
+            if thresh == 0:
+                cprint("Currently water bottom threshold value is set to {}. ".format(thresh), 'cyan')
+                thresh = input("Enter new value to change or [return] to leave unchanged: ")
+            command = "jreadxstar env-{}h{}".format(data_tag, thresh)
+
+        if step_num == 4:
+            if t_min == 0:
+                cprint("Currently Min. Time is set to {}. ".format(t_min), 'cyan')
+                t_min = input("Enter new value to change or [return] to leave unchanged: ")
+
+            if t_max == 0:
+                cprint("Currently Max. Time is set to {}. ".format(t_max), 'cyan')
+                t_max = input("Enter new value to change or [return] to leave unchanged: ")
+
+            if h_box == 0:
+                cprint("Currently box height is set to {}. ".format(h_box), 'cyan')
+                h_box = input("Enter new value to change or [return] to leave unchanged: ")
+
+            if clip == 0:
+                cprint("Currently clipping threshold is set to {}. ".format(clip), 'cyan')
+                clip = input("Enter new value to change or [return] to leave unchanged: ")
+            command = "jxstar {} {} env-{}h{} {} {}".format(t_min, t_max, data_tag, thresh, h_box, clip)
+
+        client.containers.run(image_label + ":" + image_tag, command, mounts=data_mounts, remove=True)
+
+    print("Finished processing.")
+
+
+# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 bash mkenv FF12.seg
+# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 bash jswell env-FF12 9000
+# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 jreadxstar env-FF12h9000
+# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 jxstar 0.0 0.6 env-FF12h9000 10 98
+
+if __name__ == "__main__":
+    main()
