@@ -19,7 +19,7 @@ data_mounts = [Mount(target=target_mnt_dir, source=source_mnt_dir, type='bind')]
 
 def main():
     usage = "start-msp -f/--filename <filename> -t/--threshold <threshold> -a/--t_min <t_min> " \
-            "-b/--t_max <t_max> -h/--h_box <h_box> -c/--clip <clip>"
+            "-b/--t_max <t_max> -y/--h_box <h_box> -c/--clip <clip>"
 
     parser = argparse.ArgumentParser(description='MSP controller utility', usage=usage)
 
@@ -31,10 +31,10 @@ def main():
                         help="Clip any value whose magnitude exceeds clip_value")
     parser.add_argument('-f', '--filename', type=str, required=False,
                         help="Data file")
-    parser.add_argument('-h', '--h_box', type=int, required=False, default=0,
-                        help="Height of display area")
     parser.add_argument('-t', '--threshold', type=int, required=False, default=0,
                         help="Threshold value which defines the water bottom, for heave removal")
+    parser.add_argument('-y', '--h_box', type=int, required=False, default=0,
+                        help="Height of display area")
 
     args = parser.parse_args()
     t_min = args.t_min
@@ -44,7 +44,7 @@ def main():
     thresh = args.threshold
     data_fn = args.filename
 
-    cprint("*** SIO Marine Seismic Processing Utility ***\n\n", 'cyan', attrs=['bold'])
+    cprint("\n***\n*** SIO Marine Seismic Processing Utility\n***\n", 'cyan', attrs=['bold'])
 
     if data_fn == "":
         t_max = input("Enter the name of the data file: ")
@@ -54,15 +54,16 @@ def main():
 
     # Check to see if the image is already loaded. If not, get it.
     if len(client.images.list(image_label)) == 0:
+        print ("Pulling down the container image. This is a one-time process. Please be patient.\n")
         client.images.pull(image_label, tag=image_tag)
 
-    print("Do you want to run the whole process or only a single step of the process?")
+    cprint("Do you want to run the whole process or only a single step of the process?", 'cyan', attrs=['bold'])
     print("Enter the steps you wish to run, comma or space separated [e.g.: \"2 3 4\", or \"2,3,4\"], "
-          "or press [return] to run the whole process.")
-    cprint("Make Envelope:\t\t1", 'cyan')
-    cprint("Swell Removal:\t\t2", 'cyan')
-    cprint("SEG-Y to SU Conversion:\t3", 'cyan')
-    cprint("Display Plot:\t\t4", 'cyan')
+          "or press [return] to run the whole process.\n")
+    cprint("\tMake Envelope:\t\t1", 'cyan')
+    cprint("\tSwell Removal:\t\t2", 'cyan')
+    cprint("\tSEG-Y to SU Conversion:\t3", 'cyan')
+    cprint("\tDisplay Plot:\t\t4\n", 'cyan')
     vals = input("Enter selection: ")
 
     steps = [1, 2, 3, 4]
