@@ -76,7 +76,7 @@ def main():
     for step_num in steps:
         command = ""
         if step_num == 1:
-            command = "bash mkenv {}".format(data_fn)
+            command = "bash mkenv {} {}".format(data_fn, data_tag)
 
         if step_num == 2:
             if thresh == 0:
