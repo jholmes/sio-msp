@@ -1,0 +1,125 @@
+#! /bin/csh
+
+## EDGETECH Xstar Chirp
+echo "Process xstar usage:"
+echo "    xstar tmin tmax sufile hbox clip"
+echo "       tmin and tmax (seconds) to define the vertical plot window"
+echo "       ie, 0 0.25 (window 0 to 250 ms)"
+echo "       the SU input file excluding the .su extension"
+echo "       hbox is the vertical plot size in inches"
+echo "       enter the % black clip ie, 95 (higher is lighter)"
+echo " "
+
+# get number of traces to be used in plot scale
+echo "getting the total number of traces"
+set numtraces = `surange < su/$3.su | grep traces | awk ' {print($1)}' `
+echo "number of traces = "$numtraces
+
+# get ffid range for input
+echo "getting the range of FFID's"
+
+set ffidmin = `surange < su/$3.su | grep fldr | sed 's/fldr=//; s/(//g; s/)//g' | awk ' {print($2)}' `
+#   set ffidmin = `surange < su/$3.su | grep fldr | sed 's/fldr=//; s/(//g; s/)//g' | awk ' {print($3)}' | awk -F , ' {print($1)}' `
+set ffidmax = `surange < su/$3.su | grep fldr | sed 's/fldr=//; s/(//g; s/)//g' | awk ' {print($3)}' `
+#   set ffidmax = `surange < su/$3.su | grep fldr | sed 's/fldr=//; s/(//g; s/)//g' | awk ' {print($3)}' | awk -F , ' {print($2)}' `
+
+echo "The minimum FFID is "$ffidmin
+echo "The maximum FFID is "$ffidmax
+echo " "
+echo "Setting the sort order (data window),  apply processing"
+
+#  suwind key=fldr min=$ffidmin max=$ffidmax itmin=$1 tmin=$1 verbose=1 < su/$3.su | \
+suwind key=fldr min=$ffidmin max=$ffidmax itmin=$1 verbose=1 < su/$3.su | \
+suchw key1=tracl key2=fldr | \
+suchw key1=tracr key2=fldr | \
+suchw key1=delrt a=0 | \
+suchw key1=tstat key2=delrt | \
+sustatic hdrs=1 sign=-1 | \
+sugain panel=0 scale=1 epow=10s pbal=1 qbal=1 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 tpow=2 epow=30 gpow=.8 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 mbal=1 tpow=8 gpow=.9 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 tpow=4 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 tpow=7 gpow=.8 mbal=1 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 mbal=1 pbal=1 qbal=1 tpow=3 gpow=.8 epow=-50 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 mbal=1 pbal=1 qbal=1 tpow=6 gpow=.8 epow=-50 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 tpow=6 gpow=.9 epow=-50 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 tpow=2 gpow=.9 epow=-50 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 mbal=1 > jpegs/$3.tmp
+#  sugain panel=1 wagc=.005 gagc=1 > jpegs/$3.tmp
+#  sugain panel=0 scale=1 > jpegs/$3.tmp
+#  sugain panel=1 scale=1 mbal=1 > jpegs/$3.tmp
+#  sugain panel=1 scale=1 tpow=1.1 clip=0.99 > jpegs/$3.tmp
+
+
+echo "Set scaling for PS plot"
+
+# set the plot X size based on the number of traces/inch (`expr $numtraces / 100` = 100 traces/inch)
+set wbox = `expr $numtraces / 100`
+#  set wbox = `expr $numtraces / 200`
+echo "the plot length =" $wbox "inches"
+echo
+set tmin = $1
+echo "the plot will start at TWT seconds (tmin) ="$tmin
+set tmax = $2-$1
+echo "the plot will end at TWT seconds (tmax) ="$tmax
+#  set the plot Y size (hbox) in inches
+#  set hbox = 10
+#  set hbox = 12
+#  set hbox = 18
+#  set hbox = 20
+set hbox = $4
+echo "the plot height=" $hbox "inches"
+
+# PLOT POSTSCRIPT IMAGE
+# d1 is the sample interval (SR) in seconds that should be read from the header
+# If the vertical scale is not correct - most likely the SR is not correct
+# Set d2=decimation factor used in qmipstosegy
+# d1=0.000122 d2=1 \
+
+# Change percentile for determining black clip value to adjust plot contrast
+# Higher bperc gives lighter plot - wclip=0 sets 0 and - amp. to white
+
+echo "Making the PostScript plot"
+
+nice supsimage wbox=$wbox hbox=$hbox \
+ybox=0.5 \
+x1beg=$1 x1end=$2 \
+d1num=0.01 d2num=500 \
+d2=1 \
+f1=$1 \
+f2=0 \
+#  d1=0.000122 \
+n1tic=10 n2tic=5 \
+# bperc=96 wclip=0 \
+bperc=$5 wclip=0 \
+#  grid1=dot grid2=dot \
+title="EdgeTech CHIRP Line $3 SHOTS $ffidmin-$ffidmax" \
+label1="TWT [s]" label2="SHOT" \
+< jpegs/$3.tmp > jpegs/$3.ps
+
+rm jpegs/$3.tmp
+
+# convert PS plot to GIF image
+convert -transparent-color "#ffffff" jpegs/$3.ps jpegs/$3.jpg
+#  rm jpegs/$3.ps
+
+# convert PS plot to raster for Alden printer
+#echo "converting PS plot to raster for Alden printer"
+#aldenseismic ps_files/$3
+
+# convert PS plot to raster for Raytheon TDU printer
+#echo "converting PS plot to raster for Raytheon TDU printer"
+#tduseismic ps_files/$3
+
+# view the PS with GhostView
+#gv -portrait ps_files/$3.ps
+
+# view the GIF with kview (a Linux KDE utility)
+#kview seisimag/$3.gif
+
+# view the GIF with xli
+#xli seisimag/$3.gif
+#display jpegs/$3.jpg
+
+# Save the processing runline history for future processing
+echo "xstar $1 $2 $3 $4 $5" >> proc_history
