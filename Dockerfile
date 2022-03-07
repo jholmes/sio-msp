@@ -14,7 +14,9 @@ ARG PATCH_FILE2=$SU_VER.sio_msp.patch
 ENV PATH="/app/sioseis/bin:/app/su/bin:/seisproc:${PATH}"
 ENV CWPROOT="/app/su"
 
-RUN set -ex && mkdir /app /app/sioseis /app/sioseis/bin /app/su 
+RUN set -ex && \
+    mkdir /app /app/sioseis /app/sioseis/bin /app/su /seisproc /seisproc/data /seisproc/data/segy /seisproc/data/segydh \
+    /seisproc/data/jpegs /seisproc/data/nav /seisproc/data/env-segy /seisproc/data/su
 
 ADD https://drive.google.com/uc?export=download&id=1GjwNoKkncm8pywtqsGAyIEPeWkDOpjGm /app/$PATCH_FILE1
 
@@ -66,5 +68,4 @@ COPY scripts/* /seisproc
 RUN chmod +x /seisproc/*
 WORKDIR /seisproc/data
 
-    
 CMD ["/bin/bash"]
