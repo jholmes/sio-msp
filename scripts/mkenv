@@ -8,12 +8,12 @@
 #  Filename root is just the filename without a file extension.
 #
 #  Note that no filter or decimation is done here.
-if [ $# != 2 ]; then
-    echo "Usage: mkenv filename filename-root"
+if [ $# != 1 ]; then
+    echo "Usage: mkenv filename"
     exit 1
 fi
 FILE=$1
-STEM=$2
+STEM=${FILE%.*}
 
 sioseis << EOF
 procs diskin header t2f f2t gains header2 prout diskoa end

@@ -90,7 +90,7 @@ def main():
         command = ""
         if int(step_num) == 1:
             cprint("\n\nMaking trace envelope...", 'cyan', attrs=['bold'])
-            command = "bash mkenv {} {}".format(data_fn, data_tag)
+            command = "bash mkenv {}".format(data_fn)
 
         if int(step_num) == 2:
             cprint("\n\nDe-heaving data...", 'cyan', attrs=['bold'])
