@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import shutil
 import docker
 from docker.types import Mount
 from pathlib import Path
@@ -43,6 +44,8 @@ def main():
     clip = args.clip
     thresh = args.threshold
     data_fn = args.filename
+
+    shutil.copy(os.path.join(cwd, data_fn), os.path.join(cwd+"/data/segy", data_fn))
 
     cprint("\n***\n*** SIO Marine Seismic Processing Utility\n***\n", 'cyan', attrs=['bold'])
 
@@ -110,7 +113,7 @@ def main():
     print("Finished processing.")
 
 
-# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 bash mkenv FF12.seg
+# docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 bash mkenv FF12.sgy
 # docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 bash jswell env-FF12 9000
 # docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 jreadxstar env-FF12h9000
 # docker container run --mount type=bind,src=/Users/jjholmes/workspace/processing-docker/data,dst=/seisproc/data --rm jamesinho/sio-msp:1.0.0 jxstar 0.0 0.6 env-FF12h9000 10 98
