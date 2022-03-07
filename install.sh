@@ -92,7 +92,7 @@ fi
 git clone https://github.com/jholmes/sio-msp.git
 echo ""
 echo "Preparing Python environment..."
-cd sio-msp
+cd sio-msp || exit 1
 mkdir data
 chmod a+x ./start-msp
 python3 -m venv venv
