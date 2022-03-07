@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 VER=0.9
 
@@ -36,32 +36,32 @@ fi
 
 NEEDS_INSTALL=0
 
-PACKAGESNEEDED=
+PACKAGES_NEEDED=
 if [ $GIT_IS_AVAILABLE -eq 0 ]; then
   echo "Git is not installed on this system."
-  PACKAGESNEEDED='git '
+  PACKAGES_NEEDED='git '
   NEEDS_INSTALL=1
 fi
 if [ $PYTHON3_IS_AVAILABLE -eq 0 ]; then
   echo "Python3 is not installed on this system."
-  PACKAGESNEEDED="${PACKAGESNEEDED}python3 "
+  PACKAGES_NEEDED="${PACKAGES_NEEDED}python3 "
   NEEDS_INSTALL=1
 fi
 if [ $DOCKER_IS_AVAILABLE -eq 0 ]; then
   echo "Docker is not installed on this system."
-  PACKAGESNEEDED="${PACKAGESNEEDED}docker "
+  PACKAGES_NEEDED="${PACKAGES_NEEDED}docker "
   NEEDS_INSTALL=1
 fi
 
 if [ $NEEDS_INSTALL -eq 1 ]; then
   if [[ $OSTYPE == 'linux'* ]]; then
-    if [ -x "$(command -v apk)" ];       then GIT_INSTALL_CMD="sudo apk add --no-cache $PACKAGESNEEDED"
-    elif [ -x "$(command -v apt-get)" ]; then GIT_INSTALL_CMD="sudo apt-get install $PACKAGESNEEDED"
-    elif [ -x "$(command -v dnf)" ];     then GIT_INSTALL_CMD="sudo dnf install $PACKAGESNEEDED"
-    elif [ -x "$(command -v yum)" ];     then GIT_INSTALL_CMD="sudo yum install $PACKAGESNEEDED"
-    elif [ -x "$(command -v zypper)" ];  then GIT_INSTALL_CMD="sudo zypper install $PACKAGESNEEDED"
+    if [ -x "$(command -v apk)" ];       then GIT_INSTALL_CMD="sudo apk add --no-cache $PACKAGES_NEEDED"
+    elif [ -x "$(command -v apt-get)" ]; then GIT_INSTALL_CMD="sudo apt-get install $PACKAGES_NEEDED"
+    elif [ -x "$(command -v dnf)" ];     then GIT_INSTALL_CMD="sudo dnf install $PACKAGES_NEEDED"
+    elif [ -x "$(command -v yum)" ];     then GIT_INSTALL_CMD="sudo yum install $PACKAGES_NEEDED"
+    elif [ -x "$(command -v zypper)" ];  then GIT_INSTALL_CMD="sudo zypper install $PACKAGES_NEEDED"
     else
-      echo "FAILED TO INSTALL PACKAGE: Package manager not found. You must manually install: $PACKAGESNEEDED">&2;
+      echo "FAILED TO INSTALL PACKAGE: Package manager not found. You must manually install: $PACKAGES_NEEDED">&2;
       exit
     fi
   elif [[ $OSTYPE == 'darwin'* ]]; then
@@ -86,7 +86,7 @@ if [ $NEEDS_INSTALL -eq 1 ]; then
   select yn in "Yes" "No"; do
     case $yn in
       Yes ) $GIT_INSTALL_CMD; break;;
-      No ) echo "CANNOT PROCEED: Missing packages, ${PACKAGESNEEDED}, are necessary to continue. Exiting."; exit;;
+      No ) echo "CANNOT PROCEED: Missing packages, ${PACKAGES_NEEDED}, are necessary to continue. Exiting."; exit;;
     esac
   done
 fi
