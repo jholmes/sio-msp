@@ -55,9 +55,11 @@ def main():
     h_box = args.h_box
     clip = args.clip
     thresh = args.threshold
-    data_fn = args.filename
+    full_data_fn = args.filename
+    data_fn = Path(full_data_fn).name
 
-    shutil.copy(os.path.join(cwd, data_fn), os.path.join(cwd+"/data/segy", data_fn))
+    # copy the data file to data/segy
+    shutil.copy(os.path.join(cwd, full_data_fn), os.path.join(cwd+"/data/segy", data_fn))
 
     cprint("\n***\n*** SIO Marine Seismic Processing Utility\n***\n", 'cyan', attrs=['bold'])
 
@@ -137,7 +139,11 @@ def main():
                     clip = new_clip
             command = "jxstar {} {} env-{}h{} {} {}".format(t_min, t_max, data_tag, thresh, h_box, clip)
 
-        container = client.containers.run(image_label + ":" + image_tag, command, mounts=data_mounts, remove=True, detach=True)
+        container = client.containers.run(image_label + ":" + image_tag,
+                                          command,
+                                          mounts=data_mounts,
+                                          remove=True,
+                                          detach=True)
         output = container.attach(stdout=True, stream=True, logs=True)
         for line in output:
             print(line.decode('ascii'))
