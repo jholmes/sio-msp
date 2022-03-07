@@ -1,11 +1,11 @@
 #!/bin/csh
 
-  echo " "
-  echo "Read SEG-Y file and output SU native format..."
-  echo " "
+echo " "
+echo "Read SEG-Y file and output SU native format..."
+echo " "
 
-  segyread tape=segydh/$1.sgy verbose=0 vblock=1000 conv=1 endian=0 | \
-  segyclean > su/$1.su
+segyread tape=segydh/$1.sgy verbose=0 vblock=1000 conv=1 endian=0 | \
+segyclean > su/$1.su
 
 #  segyread= segy to su format file
 #  verbose= 0 print out less; 1 print out more
@@ -16,16 +16,16 @@
 # ultimately creates .su file
 
 
-  echo " "
-  echo "Extracting SEG-Y trace header words... (ffid, group X, group Y, year, julian day, hour, minute, seconds)"
-  echo " "
+echo " "
+echo "Extracting SEG-Y trace header words... (ffid, group X, group Y, year, julian day, hour, minute, seconds)"
+echo " "
 
 #  sugethw key=fldr,gx,gy,year,day,hour,minute,sec output=ascii < su/$1.su | \
-  sugethw key=fldr,sx,sy,year,day,hour,minute,sec output=ascii < su/$1.su | \
-  grep fldr | sed 's/=/	/g' | sed 's/ //g' | \
-  awk '{FS="	"} {OFS="	"} {printf "%5s	%6s	%9.8f	%9.8f	%4s	%3s:%2s:%2s:%2s\n", \
-  line,$2,$4/3600000,$6/3600000,$8,$10,$12,$14,$16} ' line=$1 - > nav/$1.txt			#Run this with SBP 29
-  #line,$2,($4/10000)/60,($6/10000)/60,$8,$10,$12,$14,$16} ' line=$1 - > nav/$1.txt		#Run This with Non SBP 29
+sugethw key=fldr,sx,sy,year,day,hour,minute,sec output=ascii < su/$1.su | \
+grep fldr | sed 's/=/	/g' | sed 's/ //g' | \
+awk '{FS="	"} {OFS="	"} {printf "%5s	%6s	%9.8f	%9.8f	%4s	%3s:%2s:%2s:%2s\n", \
+line,$2,$4/3600000,$6/3600000,$8,$10,$12,$14,$16} ' line=$1 - > nav/$1.txt			#Run this with SBP 29
+#line,$2,($4/10000)/60,($6/10000)/60,$8,$10,$12,$14,$16} ' line=$1 - > nav/$1.txt		#Run This with Non SBP 29
 
 #  sugethw= get header words from .su file
 #  fldr= field record number; gx= X group coordinates; gy= Y group coordinates; …
