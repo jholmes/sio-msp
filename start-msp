@@ -8,6 +8,7 @@ from pathlib import Path
 import argparse
 import re
 from termcolor import cprint
+from subprocess import PIPE, run
 
 image_label = "jamesinho/sio-msp"
 image_tag = "1.0.0"
@@ -15,7 +16,7 @@ image_tag = "1.0.0"
 cwd = os.getcwd()
 source_mnt_dir = cwd + "/data"
 target_mnt_dir = "/seisproc/data"
-data_mounts = [Mount(target=target_mnt_dir, source=source_mnt_dir, type='bind')]
+data_mounts = [Mount(target=target_mnt_dir, source=source_mnt_dir, type='bind', read_only=False)]
 
 
 def main():
@@ -75,37 +76,49 @@ def main():
 
     for step_num in steps:
         command = ""
-        if step_num == 1:
+        if int(step_num) == 1:
             command = "bash mkenv {} {}".format(data_fn, data_tag)
 
-        if step_num == 2:
+        if int(step_num) == 2:
             if thresh == 0:
                 cprint("Currently water bottom threshold value is set to {}. ".format(thresh), 'cyan')
-                thresh = input("Enter new value to change or [return] to leave unchanged: ")
+                new_thresh = input("Enter new value to change or [return] to leave unchanged: ")
+                if new_thresh != '':
+                    thresh = new_thresh
             command = "bash jswell env-{} {}".format(data_tag, thresh)
 
-        if step_num == 3:
+        if int(step_num) == 3:
             if thresh == 0:
                 cprint("Currently water bottom threshold value is set to {}. ".format(thresh), 'cyan')
-                thresh = input("Enter new value to change or [return] to leave unchanged: ")
+                new_thresh = input("Enter new value to change or [return] to leave unchanged: ")
+                if new_thresh != '':
+                    thresh = new_thresh
             command = "jreadxstar env-{}h{}".format(data_tag, thresh)
 
-        if step_num == 4:
+        if int(step_num) == 4:
             if t_min == 0:
                 cprint("Currently Min. Time is set to {}. ".format(t_min), 'cyan')
-                t_min = input("Enter new value to change or [return] to leave unchanged: ")
+                new_t_min = input("Enter new value to change or [return] to leave unchanged: ")
+                if new_t_min != '':
+                    t_min = new_t_min
 
             if t_max == 0:
                 cprint("Currently Max. Time is set to {}. ".format(t_max), 'cyan')
-                t_max = input("Enter new value to change or [return] to leave unchanged: ")
+                new_t_max = input("Enter new value to change or [return] to leave unchanged: ")
+                if new_t_max != '':
+                    t_max = new_t_max
 
             if h_box == 0:
                 cprint("Currently box height is set to {}. ".format(h_box), 'cyan')
-                h_box = input("Enter new value to change or [return] to leave unchanged: ")
+                new_h_box = input("Enter new value to change or [return] to leave unchanged: ")
+                if new_h_box != '':
+                    h_box = new_h_box
 
             if clip == 0:
                 cprint("Currently clipping threshold is set to {}. ".format(clip), 'cyan')
-                clip = input("Enter new value to change or [return] to leave unchanged: ")
+                new_clip = input("Enter new value to change or [return] to leave unchanged: ")
+                if new_clip != '':
+                    clip = new_clip
             command = "jxstar {} {} env-{}h{} {} {}".format(t_min, t_max, data_tag, thresh, h_box, clip)
 
         client.containers.run(image_label + ":" + image_tag, command, mounts=data_mounts, remove=True)
