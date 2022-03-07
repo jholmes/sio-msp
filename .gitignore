@@ -36,8 +36,7 @@
 ehthumbs.db
 Thumbs.db
 
-# Other files #
-###############
+# Other files/directories #
+###########################
 .idea
-scripts
-Dockerfile
+docker
