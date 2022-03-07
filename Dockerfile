@@ -2,6 +2,7 @@ FROM ubuntu:21.04
 
 LABEL maintainer="James Holmes"
 LABEL maintainer_email="jjholmes@ucsd.edu"
+LABEL maintainer_org="UC San Diego"
 LABEL version="1.0"
 
 # Set versions of SIOSEIS and SU
