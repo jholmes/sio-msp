@@ -35,7 +35,7 @@ diskin
     ipath env-segy/$1.sgy set 0.0 1.0 end
 end
 wbt
-    thres $2 track 0.003 lprint 2 end #adjust track to widen SF range, orig 0.03
+    #thres $2 track 0.003 lprint 2 end #adjust track to widen SF range, orig 0.03
     peak abs 
     lprint 2
     end	
