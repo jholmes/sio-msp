@@ -31,6 +31,9 @@ data_mounts = [
 
 
 def main():
+    global data_fn
+    global data_tag
+
     usage = "start-msp -f/--filename <filename> -t/--threshold <threshold> -a/--t_min <t_min> " \
             "-b/--t_max <t_max> -y/--h_box <h_box> -c/--clip <clip>"
 
@@ -73,6 +76,10 @@ def main():
         shutil.copy(os.path.join(cwd, full_data_fn), os.path.join(cwd+"/data/segy", data_fn))
     except TypeError:
         cprint("\nERROR: no data file to process!\n", 'red', attrs=['bold'])
+        print("Exiting...")
+        exit(1)
+    except OSError:
+        cprint("\nERROR: data file copy destination not writeable!\n", 'red', attrs=['bold'])
         print("Exiting...")
         exit(1)
 
