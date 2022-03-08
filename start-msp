@@ -56,16 +56,25 @@ def main():
     clip = args.clip
     thresh = args.threshold
     full_data_fn = args.filename
-    data_fn = Path(full_data_fn).name
-
-    # copy the data file to data/segy
-    shutil.copy(os.path.join(cwd, full_data_fn), os.path.join(cwd+"/data/segy", data_fn))
 
     cprint("\n***\n*** SIO Marine Seismic Processing Utility\n***\n", 'cyan', attrs=['bold'])
 
-    if data_fn == "":
-        t_max = input("Enter the name of the data file: ")
-    data_tag = Path(data_fn).stem
+    if full_data_fn is None:
+        full_data_fn = input("Enter the name of the data file: ")
+
+    try:
+        if full_data_fn == '':
+            raise TypeError
+
+        data_fn = Path(full_data_fn).name
+        data_tag = Path(data_fn).stem
+
+        # copy the data file to data/segy
+        shutil.copy(os.path.join(cwd, full_data_fn), os.path.join(cwd+"/data/segy", data_fn))
+    except TypeError:
+        cprint("\nERROR: no data file to process!\n", 'red', attrs=['bold'])
+        print("Exiting...")
+        exit(1)
 
     # Initialize docker client
     client = docker.from_env()
@@ -139,6 +148,7 @@ def main():
                     clip = new_clip
             command = "jxstar {} {} env-{}h{} {} {}".format(t_min, t_max, data_tag, thresh, h_box, clip)
 
+        print("Command: {}".format(command))
         container = client.containers.run(image_label + ":" + image_tag,
                                           command,
                                           mounts=data_mounts,
